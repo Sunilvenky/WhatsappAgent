@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "whatsapp-agent-monorepo"
+version = "0.1.0"
+description = "API-first Smart WhatsApp Marketing Agent (monorepo)"
+authors = ["Your Name <you@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+[tool.black]
+line-length = 88
+
+[tool.ruff]
+line-length = 88
