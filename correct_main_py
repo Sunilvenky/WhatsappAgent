@@ -1,0 +1,20 @@
+from fastapi import FastAPI
+
+app = FastAPI(title="WhatsApp Agent API")
+
+@app.get("/")
+def read_root():
+    return {"message": "WhatsApp Agent API is running!"}
+
+@app.get("/health")
+def health_check():
+    return {"status": "healthy", "service": "API"}
+
+# Placeholder for WhatsApp webhook
+@app.post("/api/v1/webhooks/whatsapp/incoming")
+def whatsapp_webhook():
+    return {"status": "received"}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=3000)

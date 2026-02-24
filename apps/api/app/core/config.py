@@ -34,6 +34,7 @@ class Settings(BaseSettings):
     
     # AI/LLM settings
     OPENAI_API_KEY: str = ""
+    OPENAI_BASE_URL: str = "https://api.openai.com/v1"
     ANTHROPIC_API_KEY: str = ""
     LLM_PROVIDER: str = "openai"  # openai, anthropic, ollama
     LLM_MODEL: str = "gpt-4-turbo-preview"

@@ -1,0 +1,23 @@
+from fastapi import FastAPI
+
+app = FastAPI(title="LLM Stub Service")
+
+@app.get("/")
+def read_root():
+    return {"message": "LLM Stub is running!"}
+
+@app.post("/chat/completions")
+def chat_completion(request: dict):
+    # Mock response for LLM service
+    return {
+        "choices": [{
+            "message": {
+                "role": "assistant",
+                "content": "This is a mock response from the LLM stub service."
+            }
+        }]
+    }
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=4000)

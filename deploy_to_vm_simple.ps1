@@ -2,12 +2,12 @@
 
 Write-Host "==========================================" -ForegroundColor Yellow
 Write-Host "WhatsApp Agent Deployment Script" -ForegroundColor Yellow
-Write-Host "Target VM: 129.159.227.138" -ForegroundColor Yellow
+Write-Host "Target VM: 129.159.224.220" -ForegroundColor Yellow
 Write-Host "==========================================" -ForegroundColor Yellow
 Write-Host ""
 
 # Configuration
-$VM_IP = "129.159.227.138"
+$VM_IP = "129.159.224.220"
 $SSH_KEY_PATH = "C:\Users\kkavi\OneDrive\Desktop\oraclekeys\ssh-key-2025-10-14.key"
 $PROJECT_NAME = "whatsapp-agent"
 $LOCAL_PROJECT_PATH = "e:\Sunny React Projects\Whatsapp Agent"
@@ -83,7 +83,7 @@ Write-Host "  Setting up Nginx reverse proxy..." -ForegroundColor Gray
 $nginxConfig = @"
 server {
     listen 80;
-    server_name 129.159.227.138;
+    server_name 129.159.224.220;
 
     location / {
         proxy_pass http://localhost:3000;
@@ -137,9 +137,9 @@ Write-Host "WhatsApp Agent is now deployed on your VM" -ForegroundColor Green
 Write-Host "Services Status:" -ForegroundColor Cyan
 $servicesStatus
 Write-Host ""
-Write-Host "Access the API at: http://129.159.227.138" -ForegroundColor Green
-Write-Host "API Documentation: http://129.159.227.138/docs" -ForegroundColor Green
-Write-Host "Adminer: http://129.159.227.138:8080" -ForegroundColor Green
+Write-Host "Access the API at: http://129.159.224.220" -ForegroundColor Green
+Write-Host "API Documentation: http://129.159.224.220/docs" -ForegroundColor Green
+Write-Host "Adminer: http://129.159.224.220:8080" -ForegroundColor Green
 Write-Host ""
 Write-Host "NEXT STEPS:" -ForegroundColor Yellow
 Write-Host "1. Verify the services are running by accessing the URLs above" -ForegroundColor White
@@ -148,6 +148,6 @@ Write-Host "3. Configure SSL certificate for HTTPS (optional but recommended)" -
 Write-Host "4. Set up proper domain name if you have one" -ForegroundColor White
 Write-Host "5. Monitor the service logs for any issues" -ForegroundColor White
 Write-Host ""
-Write-Host "To check logs: ssh -i '$SSH_KEY_PATH' ubuntu@$VM_IP" -ForegroundColor White
-Write-Host "Then run: cd /home/ubuntu/whatsapp-agent && docker-compose -f infra/docker-compose.yml logs" -ForegroundColor White
+Write-Host "To check logs: ssh -i '$SSH_KEY_PATH' ubuntu`@129.159.224.220" -ForegroundColor White
+Write-Host "Then run: cd /home/ubuntu/whatsapp-agent; docker-compose -f infra/docker-compose.yml logs" -ForegroundColor White
 Write-Host "==========================================" -ForegroundColor Green

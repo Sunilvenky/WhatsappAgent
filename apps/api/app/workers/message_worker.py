@@ -11,7 +11,7 @@ from ..core.database import get_db
 from ..crud import message as message_crud
 from ..crud import conversation as conversation_crud
 from ..models.message import MessageStatus
-from ..connectors.whatsapp_gateway import WhatsAppGateway
+from ..connectors.whatsapp_gateway import WhatsAppGatewayConnector
 from ..ai import ReplyClassifier
 from ..core.config import settings
 from .utils import RetryManager
@@ -45,7 +45,7 @@ async def _send_message_async(message_id: int):
             return
         
         # Send via gateway
-        gateway = WhatsAppGateway()
+        gateway = WhatsAppGatewayConnector()
         result = await gateway.send_message(
             to=message.contact.phone,
             message=message.content
@@ -213,7 +213,7 @@ async def _process_incoming_message_async(
                 )
                 
                 # Send confirmation
-                gateway = WhatsAppGateway()
+                gateway = WhatsAppGatewayConnector()
                 await gateway.send_message(
                     to=from_phone,
                     message="You've been unsubscribed. You won't receive further messages from us."
@@ -224,7 +224,7 @@ async def _process_incoming_message_async(
             if auto_response_check.get("should_respond"):
                 suggested_response = auto_response_check.get("suggested_response")
                 if suggested_response:
-                    gateway = WhatsAppGateway()
+                    gateway = WhatsAppGatewayConnector()
                     await gateway.send_message(
                         to=from_phone,
                         message=suggested_response

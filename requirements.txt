@@ -36,14 +36,14 @@ apscheduler>=3.10.0
 pandas>=2.0.0
 # Phone number validation
 phonenumbers>=8.13.0
-# ML & NLP - Phase 1 (Pre-trained models)
-transformers>=4.35.0
-torch>=2.0.0
-openai-whisper>=20231117
+# ML & NLP - Phase 1 (Pre-trained models) - DISABLED for 1GB RAM
+# transformers>=4.35.0
+# torch>=2.0.0
+# openai-whisper>=20231117
 googletrans==4.0.0rc1
 langdetect>=1.0.9
-# ML & NLP - Phase 2 (Custom models)
-xgboost>=2.0.0
-scikit-learn>=1.3.0
-joblib>=1.3.0
+# ML & NLP - Phase 2 (Custom models) - DISABLED for 1GB RAM
+# xgboost>=2.0.0
+# scikit-learn>=1.3.0
+# joblib>=1.3.0
 numpy>=1.24.0

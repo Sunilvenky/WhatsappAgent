@@ -2,13 +2,7 @@
  * WhatsApp Connection Handler using Baileys
  */
 
-import makeWASocket, {
-  DisconnectReason,
-  useMultiFileAuthState,
-  fetchLatestBaileysVersion,
-  makeCacheableSignalKeyStore,
-  makeInMemoryStore,
-} from '@whiskeysockets/baileys';
+import * as baileys from '@whiskeysockets/baileys';
 import { Boom } from '@hapi/boom';
 import qrcode from 'qrcode';
 import fs from 'fs';
@@ -17,6 +11,14 @@ import axios from 'axios';
 import config from './config.js';
 import logger from './logger.js';
 import { randomDelay, formatPhoneNumber, isValidPhoneNumber } from './utils.js';
+
+// Baileys imports interop
+const makeWASocket = baileys.default?.default || baileys.default || baileys.makeWASocket || baileys;
+const useMultiFileAuthState = baileys.useMultiFileAuthState || baileys.default?.useMultiFileAuthState;
+const fetchLatestBaileysVersion = baileys.fetchLatestBaileysVersion || baileys.default?.fetchLatestBaileysVersion;
+const DisconnectReason = baileys.DisconnectReason || baileys.default?.DisconnectReason;
+const makeCacheableSignalKeyStore = baileys.makeCacheableSignalKeyStore || baileys.default?.makeCacheableSignalKeyStore;
+const makeInMemoryStore = baileys.makeInMemoryStore || baileys.default?.makeInMemoryStore;
 
 class WhatsAppHandler {
   constructor(sessionId = 'default') {
@@ -29,7 +31,7 @@ class WhatsAppHandler {
     this.messagesSentToday = 0;
     this.lastResetDate = new Date().toDateString();
     this.store = null;
-    
+
     // Ensure session directory exists
     if (!fs.existsSync(this.sessionDir)) {
       fs.mkdirSync(this.sessionDir, { recursive: true });
@@ -44,27 +46,47 @@ class WhatsAppHandler {
       logger.info(`Initializing WhatsApp connection for session: ${this.sessionId}`);
 
       // Get latest Baileys version
-      const { version, isLatest } = await fetchLatestBaileysVersion();
-      logger.info(`Using Baileys version ${version.join('.')}, isLatest: ${isLatest}`);
+      let version = [2, 3000, 1015901307];
+      try {
+        if (typeof fetchLatestBaileysVersion === 'function') {
+          const latest = await fetchLatestBaileysVersion();
+          version = latest.version;
+        }
+      } catch (e) {
+        logger.warn('Failed to fetch latest Baileys version, using fallback');
+      }
 
       // Load auth state
       const { state, saveCreds } = await useMultiFileAuthState(this.sessionDir);
 
       // Create in-memory store for chats
-      this.store = makeInMemoryStore({});
-      this.store.readFromFile(path.join(this.sessionDir, 'store.json'));
-      
-      // Save store every 10 seconds
-      setInterval(() => {
-        this.store.writeToFile(path.join(this.sessionDir, 'store.json'));
-      }, 10000);
+      if (typeof makeInMemoryStore === 'function') {
+        this.store = makeInMemoryStore({});
+        const storePath = path.join(this.sessionDir, 'store.json');
+        if (fs.existsSync(storePath)) {
+          try {
+            this.store.readFromFile(storePath);
+          } catch (e) {
+            logger.warn('Failed to read store file', e);
+          }
+        }
+
+        // Save store every 10 seconds
+        setInterval(() => {
+          try {
+            this.store.writeToFile(storePath);
+          } catch (e) {
+            // Silently ignore store save errors
+          }
+        }, 10000);
+      }
 
       // Create socket connection
       this.socket = makeWASocket({
         version,
         auth: {
           creds: state.creds,
-          keys: makeCacheableSignalKeyStore(state.keys, logger),
+          keys: typeof makeCacheableSignalKeyStore === 'function' ? makeCacheableSignalKeyStore(state.keys, logger) : state.keys,
         },
         printQRInTerminal: false,
         browser: ['WhatsApp Agent', 'Chrome', '1.0.0'],
@@ -75,7 +97,9 @@ class WhatsAppHandler {
       });
 
       // Bind store to socket
-      this.store.bind(this.socket.ev);
+      if (this.store) {
+        this.store.bind(this.socket.ev);
+      }
 
       // Handle connection updates
       this.socket.ev.on('connection.update', async (update) => {
@@ -117,16 +141,18 @@ class WhatsAppHandler {
 
     // Handle connection state
     if (connection === 'close') {
-      const shouldReconnect = (lastDisconnect?.error as Boom)?.output?.statusCode !== DisconnectReason.loggedOut;
-      
+      const statusCode = lastDisconnect?.error?.output?.statusCode;
+      const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+
       logger.info('Connection closed', {
         shouldReconnect,
-        statusCode: (lastDisconnect?.error as Boom)?.output?.statusCode,
+        statusCode,
       });
 
       if (shouldReconnect) {
         logger.info('Reconnecting...');
-        await this.connect();
+        // Add a delay before reconnecting to avoid spam
+        setTimeout(() => this.connect(), 5000);
       } else {
         this.isConnected = false;
         this.connectionStatus = 'logged_out';
@@ -148,18 +174,20 @@ class WhatsAppHandler {
    */
   async handleIncomingMessages(m) {
     const messages = m.messages;
-    
+
     for (const message of messages) {
       // Skip if message is from me
       if (message.key.fromMe) continue;
+
+      const messageContent = message.message?.conversation ||
+        message.message?.extendedTextMessage?.text ||
+        '';
 
       const messageData = {
         id: message.key.id,
         from: message.key.remoteJid,
         timestamp: message.messageTimestamp,
-        message: message.message?.conversation || 
-                 message.message?.extendedTextMessage?.text || 
-                 '',
+        message: messageContent,
         type: Object.keys(message.message || {})[0],
         sessionId: this.sessionId,
       };
@@ -332,7 +360,7 @@ class WhatsAppHandler {
    */
   checkDailyLimit() {
     const today = new Date().toDateString();
-    
+
     // Reset counter if it's a new day
     if (this.lastResetDate !== today) {
       this.messagesSentToday = 0;
@@ -376,7 +404,7 @@ class WhatsAppHandler {
     try {
       const formattedNumber = formatPhoneNumber(phoneNumber);
       const [contact] = await this.socket.onWhatsApp(formattedNumber);
-      
+
       if (!contact) {
         return null;
       }

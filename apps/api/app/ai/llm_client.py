@@ -46,8 +46,11 @@ class LLMClient:
                     logger.warning("OpenAI API key not configured")
                     return
                 import openai
-                self._client = openai.AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
-                logger.info("OpenAI client initialized")
+                self._client = openai.AsyncOpenAI(
+                    api_key=settings.OPENAI_API_KEY,
+                    base_url=settings.OPENAI_BASE_URL
+                )
+                logger.info(f"OpenAI client initialized with base_url: {settings.OPENAI_BASE_URL}")
                 
             elif self.provider == LLMProvider.ANTHROPIC:
                 if not settings.ANTHROPIC_API_KEY:

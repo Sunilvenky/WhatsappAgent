@@ -14,7 +14,7 @@ from ..crud import message as message_crud
 from ..crud import contact as contact_crud
 from ..models.campaign import CampaignStatus
 from ..models.message import MessageStatus
-from ..connectors.whatsapp_gateway import WhatsAppGateway
+from ..connectors.whatsapp_gateway import WhatsAppGatewayConnector
 from ..ai import MessageRewriter, BanRiskDetector
 from ..core.config import settings
 from .utils import WarmupManager, MessageThrottler, MessagePersonalizer
@@ -64,7 +64,7 @@ async def _execute_campaign_async(campaign_id: int):
         logger.info(f"Campaign {campaign_id}: {len(contacts)} contacts to process")
         
         # Initialize services
-        gateway = WhatsAppGateway()
+        gateway = WhatsAppGatewayConnector()
         rewriter = MessageRewriter()
         throttler = MessageThrottler(campaign.phone_number_id)
         warmup = WarmupManager(campaign.phone_number_id)
@@ -221,7 +221,7 @@ async def _process_drip_sequence(db: Session, campaign):
     if not sequence:
         return
     
-    gateway = WhatsAppGateway()
+    gateway = WhatsAppGatewayConnector()
     personalizer = MessagePersonalizer()
     
     # Get all contacts and their message history

@@ -10,51 +10,31 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-    deploy:
-      resources:
-        limits:
-          memory: 200M
 
   redis:
     image: redis:7
     ports:
       - "6379:6379"
-    deploy:
-      resources:
-        limits:
-          memory: 64M
 
-#  minio:
-#    image: minio/minio:latest
-#    command: server /data
-#    environment:
-#      MINIO_ROOT_USER: minioadmin
-#      MINIO_ROOT_PASSWORD: minioadmin
-#    ports:
-#      - "9000:9000"
-#    deploy:
-#      resources:
-#        limits:
-#          memory: 128M
+  minio:
+    image: minio/minio:latest
+    command: server /data
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
 
-#  adminer:
-#    image: adminer
-#    restart: always
-#    ports:
-#      - "8080:8080"
-#    deploy:
-#      resources:
-#        limits:
-#          memory: 64M
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - "8080:8080"
 
-#  llm-stub:
-#    build: ../apps/api/llm_stub
-#    ports:
-#      - "4000:4000"
-#    deploy:
-#      resources:
-#        limits:
-#          memory: 64M
+  llm-stub:
+    build: ../apps/api/llm_stub
+    ports:
+      - "4000:4000"
 
   whatsapp-gateway:
     build: ../apps/whatsapp-gateway
@@ -62,23 +42,18 @@ services:
       - "3001:3001"
     volumes:
       - whatsapp-sessions:/app/sessions
-      - ../apps/whatsapp-gateway/src:/app/src
     environment:
       - PORT=3001
       - NODE_ENV=development
       - WEBHOOK_URL=http://api:3000/api/v1/webhooks/whatsapp/incoming
       - WEBHOOK_SECRET=your_webhook_secret_key_here
-      - API_KEY=whatsapp_agent_key
+      - API_KEY=your_whatsapp_gateway_api_key
       - SESSIONS_DIR=/app/sessions
       - DAILY_MESSAGE_LIMIT=1000
       - LOG_LEVEL=info
       - LOG_PRETTY=true
     depends_on:
       - redis
-    deploy:
-      resources:
-        limits:
-          memory: 128M
 
   api:
     build: ../apps/api
@@ -86,47 +61,32 @@ services:
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/whatsapp_agent
       - REDIS_URL=redis://redis:6379/0
       - WHATSAPP_GATEWAY_URL=http://whatsapp-gateway:3001
-      - WHATSAPP_GATEWAY_API_KEY=whatsapp_agent_key
+      - WHATSAPP_GATEWAY_API_KEY=your_whatsapp_gateway_api_key
       - WHATSAPP_WEBHOOK_SECRET=your_webhook_secret_key_here
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
-      - OPENAI_API_KEY=your_zeroclaw_key_here
-      - OPENAI_BASE_URL=http://your_zeroclaw_ip:8000/v1
-      - LLM_MODEL=gpt-3.5-turbo
-      - LLM_PROVIDER=openai
     ports:
       - "3000:3000"
     depends_on:
       - postgres
       - redis
+      - llm-stub
       - whatsapp-gateway
-    deploy:
-      resources:
-        limits:
-          memory: 200M
 
   celery-worker:
     build: ../apps/api
-    command: celery -A apps.api.app.workers:celery_app worker --loglevel=info
+    command: celery -A apps.api.app.workers worker --loglevel=info
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/whatsapp_agent
       - REDIS_URL=redis://redis:6379/0
       - WHATSAPP_GATEWAY_URL=http://whatsapp-gateway:3001
-      - WHATSAPP_GATEWAY_API_KEY=whatsapp_agent_key
+      - WHATSAPP_GATEWAY_API_KEY=your_whatsapp_gateway_api_key
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
-      - OPENAI_API_KEY=your_zeroclaw_key_here
-      - OPENAI_BASE_URL=http://your_zeroclaw_ip:8000/v1
-      - LLM_MODEL=gpt-3.5-turbo
-      - LLM_PROVIDER=openai
     depends_on:
       - redis
       - postgres
       - whatsapp-gateway
-    deploy:
-      resources:
-        limits:
-          memory: 200M
 
 volumes:
   pgdata:
