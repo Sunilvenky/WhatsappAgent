@@ -16,6 +16,7 @@ import {
   LogOut
 } from "lucide-react";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 import { GATEWAY_URL, API_KEY } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -24,10 +25,30 @@ export default function Home() {
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+
+  // Multi-Tenancy: Get user session from local storage
+  const [user, setUser] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    const storedToken = localStorage.getItem("v_token");
+    const storedUser = localStorage.getItem("v_user");
+
+    if (!storedToken) {
+      router.push("/auth");
+    } else {
+      setToken(storedToken);
+      setUser(storedUser);
+    }
+  }, [router]);
 
   const fetchStatus = async () => {
+    const sessionId = localStorage.getItem("v_user") || "default";
     try {
-      const response = await axios.get(`${GATEWAY_URL}/auth/status?api_key=${API_KEY}`);
+      const response = await axios.get(`${GATEWAY_URL}/auth/status?api_key=${API_KEY}`, {
+        headers: { "x-session-id": sessionId }
+      });
       setStatus(response.data.data);
       if (response.data.data.status === 'qr_ready') {
         fetchQR();
@@ -44,8 +65,11 @@ export default function Home() {
   };
 
   const fetchQR = async () => {
+    const sessionId = localStorage.getItem("v_user") || "default";
     try {
-      const response = await axios.get(`${GATEWAY_URL}/auth/qr?api_key=${API_KEY}`);
+      const response = await axios.get(`${GATEWAY_URL}/auth/qr?api_key=${API_KEY}`, {
+        headers: { "x-session-id": sessionId }
+      });
       if (response.data.data.qrCode) {
         setQrCode(response.data.data.qrCode);
       }
@@ -56,18 +80,29 @@ export default function Home() {
 
   const handleLogout = async () => {
     if (!confirm("Are you sure you want to terminate this session?")) return;
+    const sessionId = localStorage.getItem("v_user") || "default";
     try {
-      await axios.post(`${GATEWAY_URL}/auth/logout?api_key=${API_KEY}`);
+      await axios.post(`${GATEWAY_URL}/auth/logout?api_key=${API_KEY}`, {}, {
+        headers: { "x-session-id": sessionId }
+      });
       fetchStatus();
     } catch (err) {
       alert("Logout failed");
     }
   };
 
+  const clearAuth = () => {
+    localStorage.removeItem("v_token");
+    localStorage.removeItem("v_user");
+    router.push("/auth");
+  };
+
   useEffect(() => {
-    fetchStatus();
-    const interval = setInterval(fetchStatus, 10000);
-    return () => clearInterval(interval);
+    if (localStorage.getItem("v_token")) {
+      fetchStatus();
+      const interval = setInterval(fetchStatus, 10000);
+      return () => clearInterval(interval);
+    }
   }, []);
 
   return (

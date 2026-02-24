@@ -9,35 +9,67 @@ import { formatError, formatSuccess, sanitizeMessage } from './utils.js';
 
 const router = express.Router();
 
-// Global WhatsApp handler instance
-let whatsappHandler = null;
+// Map to store multiple WhatsApp handler instances (one per tenant/user)
+const handlers = new Map();
 
 /**
- * Initialize WhatsApp handler
+ * Get or initialize a WhatsApp handler for a specific session
+ * @param {string} sessionId - Unique ID for the session/tenant
  */
-async function ensureWhatsAppHandler() {
-  if (!whatsappHandler) {
-    whatsappHandler = new WhatsAppHandler('default');
-    await whatsappHandler.connect();
+async function getHandler(sessionId) {
+  if (!sessionId) return null;
+
+  let handler = handlers.get(sessionId);
+  if (!handler) {
+    logger.info(`Initializing new WhatsApp session for tenant: ${sessionId}`);
+    handler = new WhatsAppHandler(sessionId);
+    handlers.set(sessionId, handler);
+    await handler.connect();
   }
-  return whatsappHandler;
+  return handler;
 }
+
+/**
+ * Middleware to extract and validate session ID
+ */
+const sessionMiddleware = async (req, res, next) => {
+  const sessionId = req.headers['x-session-id'] || req.query.session_id || 'default';
+
+  try {
+    const handler = await getHandler(sessionId);
+    if (!handler) {
+      return res.status(400).json(formatError({ message: 'Missing or invalid session ID' }));
+    }
+    req.whatsapp = handler;
+    req.sessionId = sessionId;
+    next();
+  } catch (error) {
+    logger.error(`Failed to initialize session ${sessionId}:`, error);
+    res.status(500).json(formatError(error));
+  }
+};
+
+// Apply session middleware to all authenticated routes
+router.use(['/auth', '/messages', '/contacts', '/health'], (req, res, next) => {
+  // Only apply to specific sub-routes if needed, or all for simplicity
+  sessionMiddleware(req, res, next);
+});
 
 /**
  * GET /auth/qr - Get QR code for authentication
  */
 router.get('/auth/qr', async (req, res) => {
   try {
-    const handler = await ensureWhatsAppHandler();
+    const handler = req.whatsapp;
     const qrCode = handler.getQRCode();
-    
+
     if (!qrCode) {
       return res.json(formatSuccess({
         qrCode: null,
         message: 'Already authenticated or waiting for QR code',
       }));
     }
-    
+
     res.json(formatSuccess({
       qrCode,
       message: 'Scan this QR code with WhatsApp',
@@ -53,9 +85,9 @@ router.get('/auth/qr', async (req, res) => {
  */
 router.get('/auth/status', async (req, res) => {
   try {
-    const handler = await ensureWhatsAppHandler();
+    const handler = req.whatsapp;
     const status = handler.getConnectionStatus();
-    
+
     res.json(formatSuccess(status));
   } catch (error) {
     logger.error('Failed to get status:', error);
@@ -68,13 +100,10 @@ router.get('/auth/status', async (req, res) => {
  */
 router.post('/auth/logout', async (req, res) => {
   try {
-    if (!whatsappHandler) {
-      return res.status(400).json(formatError({ message: 'Not connected' }));
-    }
-    
-    await whatsappHandler.logout();
-    whatsappHandler = null;
-    
+    const handler = req.whatsapp;
+    await handler.logout();
+    handlers.delete(req.sessionId);
+
     res.json(formatSuccess(null, 'Logged out successfully'));
   } catch (error) {
     logger.error('Failed to logout:', error);
@@ -88,28 +117,28 @@ router.post('/auth/logout', async (req, res) => {
 router.post('/messages/send', async (req, res) => {
   try {
     const { to, message, options } = req.body;
-    
+
     // Validation
     if (!to || !message) {
       return res.status(400).json(formatError({
         message: 'Missing required fields: to, message',
       }));
     }
-    
-    const handler = await ensureWhatsAppHandler();
-    
+
+    const handler = req.whatsapp;
+
     if (!handler.isWhatsAppConnected()) {
       return res.status(503).json(formatError({
         message: 'WhatsApp not connected. Please scan QR code first.',
       }));
     }
-    
+
     // Sanitize message
     const sanitized = sanitizeMessage(message);
-    
+
     // Send message
     const result = await handler.sendMessage(to, sanitized, options || {});
-    
+
     res.json(formatSuccess(result, 'Message sent successfully'));
   } catch (error) {
     logger.error('Failed to send message:', error);
@@ -123,34 +152,34 @@ router.post('/messages/send', async (req, res) => {
 router.post('/messages/bulk', async (req, res) => {
   try {
     const { messages } = req.body;
-    
+
     // Validation
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return res.status(400).json(formatError({
         message: 'messages must be a non-empty array',
       }));
     }
-    
-    const handler = await ensureWhatsAppHandler();
-    
+
+    const handler = req.whatsapp;
+
     if (!handler.isWhatsAppConnected()) {
       return res.status(503).json(formatError({
         message: 'WhatsApp not connected. Please scan QR code first.',
       }));
     }
-    
+
     // Sanitize all messages
     const sanitized = messages.map(msg => ({
       ...msg,
       message: sanitizeMessage(msg.message),
     }));
-    
+
     // Send messages
     const results = await handler.sendBulkMessages(sanitized);
-    
+
     const successCount = results.filter(r => r.success).length;
     const failedCount = results.length - successCount;
-    
+
     res.json(formatSuccess({
       results,
       summary: {
@@ -171,24 +200,24 @@ router.post('/messages/bulk', async (req, res) => {
 router.get('/contacts/check/:phoneNumber', async (req, res) => {
   try {
     const { phoneNumber } = req.params;
-    
-    const handler = await ensureWhatsAppHandler();
-    
+
+    const handler = req.whatsapp;
+
     if (!handler.isWhatsAppConnected()) {
       return res.status(503).json(formatError({
         message: 'WhatsApp not connected',
       }));
     }
-    
+
     const contact = await handler.getContact(phoneNumber);
-    
+
     if (!contact) {
       return res.json(formatSuccess({
         exists: false,
         number: phoneNumber,
       }));
     }
-    
+
     res.json(formatSuccess(contact));
   } catch (error) {
     logger.error('Failed to check contact:', error);
@@ -204,9 +233,10 @@ router.get('/health', (req, res) => {
     status: 'ok',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    whatsappConnected: whatsappHandler ? whatsappHandler.isWhatsAppConnected() : false,
+    whatsappConnected: req.whatsapp ? req.whatsapp.isWhatsAppConnected() : false,
+    sessionId: req.sessionId,
   };
-  
+
   res.json(formatSuccess(health));
 });
 
