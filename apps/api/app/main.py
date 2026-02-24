@@ -3,7 +3,7 @@ FastAPI application bootstrap for WhatsApp Agent API.
 Run: python -m apps.api.app.main
 """
 import uvicorn
-from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from apps.api.app.api.v1 import api_router
 from apps.api.app.core.config import settings
 
@@ -14,6 +14,15 @@ app = FastAPI(
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc"
+)
+
+# Set up CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, specify your Netlify URL here
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Include all API routes
