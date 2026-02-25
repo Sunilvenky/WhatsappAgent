@@ -14,6 +14,6 @@ class HealthResponse(BaseModel):
     data: Optional[dict] = None
 
 
-@router.get("/health", response_model=HealthResponse)
+@router.get("/", response_model=HealthResponse)
 async def health():
     return {"code": "ok", "message": "healthy", "data": {"status": "ok"}}

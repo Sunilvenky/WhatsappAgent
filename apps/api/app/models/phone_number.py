@@ -17,6 +17,7 @@ class PhoneNumber(Base):
     __tablename__ = "phone_numbers"
 
     id = Column(Integer, primary_key=True, index=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, index=True)
     contact_id = Column(Integer, ForeignKey("contacts.id", ondelete="CASCADE"), nullable=False)
     
     # Phone number information
@@ -38,11 +39,13 @@ class PhoneNumber(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     # Relationships
+    tenant = relationship("Tenant", back_populates="phone_numbers")
     contact = relationship("Contact", back_populates="phone_numbers")
-    messages = relationship("Message", back_populates="phone_number")
+    messages = relationship("Message", back_populates="phone_number", cascade="all, delete-orphan")
 
     # Indexes for performance
     __table_args__ = (
+        Index("idx_phone_tenant", "tenant_id"),
         Index("idx_phone_number", "number"),
         Index("idx_phone_contact", "contact_id"),
         Index("idx_phone_whatsapp", "is_whatsapp_verified"),

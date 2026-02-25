@@ -45,6 +45,7 @@ class Message(Base):
     __tablename__ = "messages"
 
     id = Column(Integer, primary_key=True, index=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, index=True)
     
     # Message relationships
     campaign_id = Column(Integer, ForeignKey("campaigns.id", ondelete="SET NULL"), nullable=True)
@@ -87,6 +88,7 @@ class Message(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     # Relationships
+    tenant = relationship("Tenant", back_populates="messages")
     campaign = relationship("Campaign", back_populates="messages")
     conversation = relationship("Conversation", back_populates="messages")
     phone_number = relationship("PhoneNumber", back_populates="messages")

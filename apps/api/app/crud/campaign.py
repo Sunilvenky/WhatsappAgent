@@ -37,7 +37,7 @@ class CampaignCRUD:
         limit: int = 100,
         created_by: Optional[int] = None,
         status: Optional[CampaignStatus] = None,
-        campaign_type: Optional[CampaignType] = None,
+        type: Optional[CampaignType] = None,
         search: Optional[str] = None
     ) -> List[Campaign]:
         """Get multiple campaigns with optional filtering."""
@@ -49,8 +49,8 @@ class CampaignCRUD:
         if status:
             query = query.filter(Campaign.status == status)
             
-        if campaign_type:
-            query = query.filter(Campaign.type == campaign_type)
+        if type:
+            query = query.filter(Campaign.type == type)
         
         if search:
             search_filter = or_(

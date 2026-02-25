@@ -40,8 +40,14 @@ class UserCRUD:
         return db_user
 
     def authenticate_user(self, db: Session, username: str, password: str) -> Optional[User]:
-        """Authenticate user with username and password."""
+        """Authenticate user with username or email and password."""
+        # Try fetching by username first
         user = self.get_user_by_username(db, username)
+        
+        # If not found, try fetching by email (case-insensitive)
+        if not user:
+            user = self.get_user_by_email(db, username.lower())
+            
         if not user:
             return None
         if not verify_password(password, user.hashed_password):

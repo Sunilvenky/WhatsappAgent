@@ -3,6 +3,7 @@ FastAPI application bootstrap for WhatsApp Agent API.
 Run: python -m apps.api.app.main
 """
 import uvicorn
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from apps.api.app.api.v1 import api_router
 from apps.api.app.core.config import settings

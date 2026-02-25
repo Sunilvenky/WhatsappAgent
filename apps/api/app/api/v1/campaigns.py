@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 
 from apps.api.app.core.database import get_db
-from apps.api.app.crud import campaign as campaign_crud
+from apps.api.app.crud import campaign_crud
 from apps.api.app.schemas.campaign import (
     CampaignCreate,
     CampaignUpdate,
@@ -61,7 +61,10 @@ def list_campaigns(
         limit=limit
     )
     
-    campaigns = campaign_crud.search_campaigns(db, search_params)
+    campaigns = campaign_crud.get_multi(
+        db, 
+        **search_params.model_dump()
+    )
     return campaigns
 
 
@@ -416,7 +419,10 @@ def get_campaign_overview(
         limit=1000  # Get all for stats
     )
     
-    campaigns = campaign_crud.search_campaigns(db, search_params)
+    campaigns = campaign_crud.get_multi(
+        db, 
+        **search_params.model_dump()
+    )
     
     # Calculate overview statistics
     total_campaigns = len(campaigns)

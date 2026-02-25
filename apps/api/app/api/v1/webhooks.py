@@ -7,7 +7,7 @@ from pydantic import BaseModel
 
 from apps.api.app.core.database import get_db
 from apps.api.app.core.config import settings
-from apps.api.app.crud import conversation as conversation_crud, message as message_crud
+from apps.api.app.crud import conversation_crud, message_crud
 from apps.api.app.models.message import MessageDirection
 import logging
 

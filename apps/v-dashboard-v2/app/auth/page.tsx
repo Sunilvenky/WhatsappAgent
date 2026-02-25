@@ -4,11 +4,15 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Shield, Lock, Terminal as TerminalIcon, AlertCircle, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
-import axios from "axios";
-import { API_BASE_URL } from "@/lib/constants";
+
+// Admin credentials - in production, use a proper auth backend
+const ADMIN_USERS = [
+    { email: "sunil.rocknrollriders@gmail.com", password: "Welcome@2026" },
+    { email: "admin@vortex.com", password: "admin123" },
+];
 
 export default function Login() {
-    const [username, setUsername] = useState("");
+    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -20,18 +24,25 @@ export default function Login() {
         setError(null);
 
         try {
-            const formData = new FormData();
-            formData.append("username", username);
-            formData.append("password", password);
+            // Simple credential check - bypasses Supabase Auth
+            const user = ADMIN_USERS.find(
+                (u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password
+            );
 
-            const response = await axios.post(`${API_BASE_URL}/auth/login`, formData);
+            if (!user) {
+                throw new Error("Invalid credentials. Access Denied.");
+            }
 
-            localStorage.setItem("v_token", response.data.access_token);
-            localStorage.setItem("v_user", username);
+            // Generate a simple session token
+            const token = btoa(`${user.email}:${Date.now()}`);
+            localStorage.setItem("v_token", token);
+            localStorage.setItem("v_user", user.email);
 
+            console.log("Login successful!");
             router.push("/");
         } catch (err: any) {
-            setError(err.response?.data?.detail || "Authentication Failed. Access Denied.");
+            console.error("Login attempt failed:", err);
+            setError(err.message || "Authentication Failed. Access Denied.");
         } finally {
             setLoading(false);
         }
@@ -63,15 +74,15 @@ export default function Login() {
                     <form onSubmit={handleLogin} className="space-y-6">
                         <div className="space-y-2">
                             <label className="text-[10px] uppercase tracking-widest text-zinc-500 flex items-center gap-2">
-                                <TerminalIcon className="w-3 h-3" /> Identity (Username)
+                                <TerminalIcon className="w-3 h-3" /> Identity (Email)
                             </label>
                             <input
-                                type="text"
+                                type="email"
                                 required
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
                                 className="w-full bg-white/[0.03] border border-zinc-800 p-4 rounded-sm text-sm focus:border-primary transition-colors outline-none font-mono"
-                                placeholder="root"
+                                placeholder="name@domain.com"
                             />
                         </div>
 

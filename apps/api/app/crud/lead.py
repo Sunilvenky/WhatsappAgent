@@ -38,7 +38,14 @@ class LeadCRUD:
         status: Optional[LeadStatus] = None,
         priority: Optional[LeadPriority] = None,
         source: Optional[LeadSource] = None,
-        search: Optional[str] = None
+        search: Optional[str] = None,
+        campaign_id: Optional[int] = None,
+        min_value: Optional[float] = None,
+        max_value: Optional[float] = None,
+        min_score: Optional[int] = None,
+        max_score: Optional[int] = None,
+        expected_close_before: Optional[datetime] = None,
+        expected_close_after: Optional[datetime] = None
     ) -> List[Lead]:
         """Get multiple leads with optional filtering."""
         query = db.query(Lead)
@@ -54,6 +61,27 @@ class LeadCRUD:
             
         if source:
             query = query.filter(Lead.source == source)
+            
+        if campaign_id:
+            query = query.filter(Lead.campaign_id == campaign_id)
+            
+        if min_value is not None:
+            query = query.filter(Lead.estimated_value >= min_value)
+            
+        if max_value is not None:
+            query = query.filter(Lead.estimated_value <= max_value)
+            
+        if min_score is not None:
+            query = query.filter(Lead.lead_score >= min_score)
+            
+        if max_score is not None:
+            query = query.filter(Lead.lead_score <= max_score)
+            
+        if expected_close_before:
+            query = query.filter(Lead.expected_close_date <= expected_close_before)
+            
+        if expected_close_after:
+            query = query.filter(Lead.expected_close_date >= expected_close_after)
         
         if search:
             search_filter = or_(

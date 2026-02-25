@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from typing import Optional
-from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, Index
+from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, Index, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -19,6 +19,8 @@ class Contact(Base):
     __tablename__ = "contacts"
 
     id = Column(Integer, primary_key=True, index=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, index=True)
+    
     first_name = Column(String(100), nullable=False, index=True)
     last_name = Column(String(100), nullable=True, index=True)
     email = Column(String(255), nullable=True, unique=True, index=True)
@@ -41,10 +43,14 @@ class Contact(Base):
     last_contacted = Column(DateTime(timezone=True), nullable=True)
 
     # Relationships
+    tenant = relationship("Tenant", back_populates="contacts")
     phone_numbers = relationship("PhoneNumber", back_populates="contact", cascade="all, delete-orphan")
     conversations = relationship("Conversation", back_populates="contact", cascade="all, delete-orphan")
     leads = relationship("Lead", back_populates="contact", cascade="all, delete-orphan")
     unsubscribers = relationship("Unsubscriber", back_populates="contact", cascade="all, delete-orphan")
+    campaign_progress = relationship("ContactCampaignProgress", back_populates="contact", cascade="all, delete-orphan")
+    orders = relationship("Order", back_populates="contact", cascade="all, delete-orphan")
+    invoices = relationship("Invoice", back_populates="contact", cascade="all, delete-orphan")
 
     # Indexes for performance
     __table_args__ = (

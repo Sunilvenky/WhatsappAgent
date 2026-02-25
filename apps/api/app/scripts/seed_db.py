@@ -117,9 +117,14 @@ def create_sample_contacts(db: Session):
     
     contacts = []
     for contact_data in contacts_data:
-        contact = Contact(**contact_data)
-        db.add(contact)
-        contacts.append(contact)
+        # Check if contact already exists by email
+        existing = db.query(Contact).filter(Contact.email == contact_data["email"]).first()
+        if not existing:
+            contact = Contact(**contact_data)
+            db.add(contact)
+            contacts.append(contact)
+        else:
+            contacts.append(existing)
     
     db.commit()
     
@@ -181,9 +186,14 @@ def create_sample_phone_numbers(db: Session, contacts):
     
     phone_numbers = []
     for phone_info in phone_data:
-        phone = PhoneNumber(**phone_info)
-        db.add(phone)
-        phone_numbers.append(phone)
+        # Check if phone number already exists
+        existing = db.query(PhoneNumber).filter(PhoneNumber.number == phone_info["number"]).first()
+        if not existing:
+            phone = PhoneNumber(**phone_info)
+            db.add(phone)
+            phone_numbers.append(phone)
+        else:
+            phone_numbers.append(existing)
     
     db.commit()
     
@@ -205,8 +215,8 @@ def create_sample_campaigns(db: Session, users):
             "status": CampaignStatus.COMPLETED,
             "created_by": marketer.id,
             "message_template": "Hi {{first_name}}! 🚀 We're excited to announce our new AI features that will revolutionize your workflow. Check them out: {{product_link}}",
-            "target_criteria": '{"tags": ["prospect", "customer"], "opt_in_status": true}',
-            "personalization_fields": '{"first_name": "contact.first_name", "product_link": "https://app.example.com/ai-features"}',
+            "target_criteria": {"tags": ["prospect", "customer"], "opt_in_status": True},
+            "personalization_fields": {"first_name": "contact.first_name", "product_link": "https://app.example.com/ai-features"},
             "started_at": datetime.utcnow() - timedelta(days=15),
             "ended_at": datetime.utcnow() - timedelta(days=10),
             "total_recipients": 150,
@@ -223,8 +233,8 @@ def create_sample_campaigns(db: Session, users):
             "status": CampaignStatus.RUNNING,
             "created_by": marketer.id,
             "message_template": "🎉 Holiday Special: Get 30% off your next purchase! Use code HOLIDAY30. Valid until {{expiry_date}}. Shop now: {{shop_link}}",
-            "target_criteria": '{"tags": ["premium", "customer"], "opt_in_status": true}',
-            "personalization_fields": '{"expiry_date": "2025-12-31", "shop_link": "https://shop.example.com/holiday"}',
+            "target_criteria": {"tags": ["premium", "customer"], "opt_in_status": True},
+            "personalization_fields": {"expiry_date": "2025-12-31", "shop_link": "https://shop.example.com/holiday"},
             "started_at": datetime.utcnow() - timedelta(days=5),
             "total_recipients": 80,
             "messages_sent": 80,
@@ -240,8 +250,8 @@ def create_sample_campaigns(db: Session, users):
             "status": CampaignStatus.RUNNING,
             "created_by": marketer.id,
             "message_template": "Welcome to WhatsApp Agent, {{first_name}}! 👋 We're here to help you succeed. Here's what you can expect: {{onboarding_link}}",
-            "target_criteria": '{"source": "website", "opt_in_status": true, "days_since_signup": 0}',
-            "personalization_fields": '{"first_name": "contact.first_name", "onboarding_link": "https://help.example.com/onboarding"}',
+            "target_criteria": {"source": "website", "opt_in_status": True, "days_since_signup": 0},
+            "personalization_fields": {"first_name": "contact.first_name", "onboarding_link": "https://help.example.com/onboarding"},
             "started_at": datetime.utcnow() - timedelta(days=30),
             "total_recipients": 45,
             "messages_sent": 45,
@@ -254,9 +264,14 @@ def create_sample_campaigns(db: Session, users):
     
     campaigns = []
     for campaign_data in campaigns_data:
-        campaign = Campaign(**campaign_data)
-        db.add(campaign)
-        campaigns.append(campaign)
+        # Check if campaign exists by name
+        existing = db.query(Campaign).filter(Campaign.name == campaign_data["name"]).first()
+        if not existing:
+            campaign = Campaign(**campaign_data)
+            db.add(campaign)
+            campaigns.append(campaign)
+        else:
+            campaigns.append(existing)
     
     db.commit()
     
@@ -308,9 +323,17 @@ def create_sample_conversations(db: Session, contacts, users):
     
     conversations = []
     for conv_data in conversations_data:
-        conversation = Conversation(**conv_data)
-        db.add(conversation)
-        conversations.append(conversation)
+        # Check if conversation exists for this contact and subject
+        existing = db.query(Conversation).filter(
+            Conversation.contact_id == conv_data["contact_id"],
+            Conversation.subject == conv_data["subject"]
+        ).first()
+        if not existing:
+            conversation = Conversation(**conv_data)
+            db.add(conversation)
+            conversations.append(conversation)
+        else:
+            conversations.append(existing)
     
     db.commit()
     
@@ -378,9 +401,14 @@ def create_sample_messages(db: Session, campaigns, conversations, phone_numbers)
     
     messages = []
     for msg_data in messages_data:
-        message = Message(**msg_data)
-        db.add(message)
-        messages.append(message)
+        # Check if message exists by whatsapp_message_id
+        existing = db.query(Message).filter(Message.whatsapp_message_id == msg_data["whatsapp_message_id"]).first()
+        if not existing:
+            message = Message(**msg_data)
+            db.add(message)
+            messages.append(message)
+        else:
+            messages.append(existing)
     
     db.commit()
     
@@ -410,7 +438,7 @@ def create_sample_leads(db: Session, contacts, campaigns, users):
             "next_follow_up": datetime.utcnow() + timedelta(days=1),
             "lead_score": 85,
             "qualification_notes": "CTO with budget authority, actively evaluating solutions",
-            "pain_points": '["manual processes", "scaling issues", "team productivity"]',
+            "pain_points": ["manual processes", "scaling issues", "team productivity"],
             "budget_range": "$20k - $30k",
             "decision_maker": True,
             "conversion_source": "AI features announcement",
@@ -432,7 +460,7 @@ def create_sample_leads(db: Session, contacts, campaigns, users):
             "next_follow_up": datetime.utcnow() + timedelta(hours=24),
             "lead_score": 90,
             "qualification_notes": "Founder seeking partnership, high growth potential",
-            "pain_points": '["limited resources", "market expansion", "tech stack"]',
+            "pain_points": ["limited resources", "market expansion", "tech stack"],
             "budget_range": "$50k+",
             "decision_maker": True,
             "conversion_source": "founder referral",
@@ -458,9 +486,14 @@ def create_sample_leads(db: Session, contacts, campaigns, users):
     
     leads = []
     for lead_data in leads_data:
-        lead = Lead(**lead_data)
-        db.add(lead)
-        leads.append(lead)
+        # Check if lead exists by title
+        existing = db.query(Lead).filter(Lead.title == lead_data["title"]).first()
+        if not existing:
+            lead = Lead(**lead_data)
+            db.add(lead)
+            leads.append(lead)
+        else:
+            leads.append(existing)
     
     db.commit()
     

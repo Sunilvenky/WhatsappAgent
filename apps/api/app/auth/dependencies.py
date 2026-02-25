@@ -23,11 +23,12 @@ async def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
     
-    username = verify_token(token)
-    if username is None:
+    identifier = verify_token(token)
+    if identifier is None:
         raise credentials_exception
     
-    user = db.query(User).filter(User.username == username).first()
+    # Try looking up by username or email
+    user = db.query(User).filter((User.username == identifier) | (User.email == identifier)).first()
     if user is None:
         raise credentials_exception
     

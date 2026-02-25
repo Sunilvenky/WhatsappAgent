@@ -38,6 +38,7 @@ class Unsubscriber(Base):
     __tablename__ = "unsubscribers"
 
     id = Column(Integer, primary_key=True, index=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, index=True)
     
     # Unsubscriber relationships
     contact_id = Column(Integer, ForeignKey("contacts.id", ondelete="CASCADE"), nullable=False)
@@ -66,6 +67,7 @@ class Unsubscriber(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     # Relationships
+    tenant = relationship("Tenant", back_populates="unsubscribers")
     contact = relationship("Contact", back_populates="unsubscribers")
     campaign = relationship("Campaign")
     message = relationship("Message")

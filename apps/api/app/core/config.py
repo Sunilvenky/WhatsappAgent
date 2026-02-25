@@ -16,9 +16,10 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "change-me-in-prod"
     
     # JWT settings
-    JWT_SECRET_KEY: str = "your-jwt-secret-key-change-in-production"
+    JWT_SECRET_KEY: str = "NX6WKcjB+qvhjThIMWf2m9omfnPWXcJ2usk0Xi12TIfv2J0WJH46wzc/N+YZAPzLuYi7+r6/MMuX6PdTbbjXKg=="
     JWT_ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 1 week
+    SUPABASE_JWT_SECRET: str = "change-me-in-prod"
     
     # Database settings
     DATABASE_ECHO: bool = False

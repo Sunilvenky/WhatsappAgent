@@ -52,6 +52,7 @@ class Lead(Base):
     __tablename__ = "leads"
 
     id = Column(Integer, primary_key=True, index=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, index=True)
     
     # Lead relationships
     contact_id = Column(Integer, ForeignKey("contacts.id", ondelete="CASCADE"), nullable=False)
@@ -98,6 +99,7 @@ class Lead(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     # Relationships
+    tenant = relationship("Tenant", back_populates="leads")
     contact = relationship("Contact", back_populates="leads")
     assigned_user = relationship("User", back_populates="assigned_leads")
     campaign = relationship("Campaign")

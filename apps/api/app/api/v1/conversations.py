@@ -5,11 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 
 from apps.api.app.core.database import get_db
-from apps.api.app.crud import (
-    conversation as conversation_crud,
-    message as message_crud,
-    reply as reply_crud
-)
+from apps.api.app.crud import conversation_crud, message_crud, reply_crud
 from apps.api.app.schemas.conversation import (
     ConversationCreate,
     ConversationUpdate,
@@ -74,14 +70,9 @@ def list_conversations(
         contact_id=contact_id,
         assigned_to=assigned_to,
         status=status,
-        priority=priority
+        priority=priority,
+        has_unread=has_unread
     )
-    
-    # Filter by unread messages if requested
-    if has_unread is True:
-        conversations = [c for c in conversations if c.has_unread_messages]
-    elif has_unread is False:
-        conversations = [c for c in conversations if not c.has_unread_messages]
     
     return conversations
 

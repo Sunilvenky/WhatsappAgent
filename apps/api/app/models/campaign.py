@@ -37,6 +37,7 @@ class Campaign(Base):
     __tablename__ = "campaigns"
 
     id = Column(Integer, primary_key=True, index=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, index=True)
     
     # Basic campaign information
     name = Column(String(255), nullable=False, index=True)
@@ -78,8 +79,11 @@ class Campaign(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     # Relationships
+    tenant = relationship("Tenant", back_populates="campaigns")
     creator = relationship("User", back_populates="campaigns")
     messages = relationship("Message", back_populates="campaign", cascade="all, delete-orphan")
+    steps = relationship("CampaignStep", back_populates="campaign", cascade="all, delete-orphan")
+    contact_progress = relationship("ContactCampaignProgress", back_populates="campaign", cascade="all, delete-orphan")
 
     # Indexes for performance
     __table_args__ = (

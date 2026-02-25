@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 
 from apps.api.app.core.database import get_db
-from apps.api.app.crud import contact as contact_crud, phone_number as phone_number_crud
+from apps.api.app.crud import contact_crud, phone_number_crud
 from apps.api.app.schemas.contact import (
     ContactCreate,
     ContactUpdate,
@@ -57,7 +57,10 @@ def list_contacts(
         limit=limit
     )
     
-    contacts = contact_crud.search_contacts(db, search_params)
+    contacts = contact_crud.get_multi(
+        db, 
+        **search_params.model_dump()
+    )
     return contacts
 
 

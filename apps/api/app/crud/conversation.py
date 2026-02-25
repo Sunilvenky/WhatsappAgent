@@ -46,11 +46,15 @@ class ConversationCRUD:
         assigned_to: Optional[int] = None,
         status: Optional[ConversationStatus] = None,
         priority: Optional[str] = None,
-        has_unread: Optional[bool] = None
+        has_unread: Optional[bool] = None,
+        contact_id: Optional[int] = None
     ) -> List[Conversation]:
         """Get multiple conversations with optional filtering."""
         query = db.query(Conversation)
         
+        if contact_id:
+            query = query.filter(Conversation.contact_id == contact_id)
+            
         if assigned_to:
             query = query.filter(Conversation.assigned_to == assigned_to)
             

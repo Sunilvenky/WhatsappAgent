@@ -37,6 +37,7 @@ class Reply(Base):
     __tablename__ = "replies"
 
     id = Column(Integer, primary_key=True, index=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, index=True)
     
     # Reply relationships
     conversation_id = Column(Integer, ForeignKey("conversations.id", ondelete="CASCADE"), nullable=False)
@@ -73,6 +74,7 @@ class Reply(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     # Relationships
+    tenant = relationship("Tenant", back_populates="replies")
     conversation = relationship("Conversation", back_populates="replies")
     original_message = relationship("Message", foreign_keys=[original_message_id])
     response_message = relationship("Message", foreign_keys=[response_message_id])

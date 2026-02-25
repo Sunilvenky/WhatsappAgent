@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 
 from apps.api.app.core.database import get_db
-from apps.api.app.crud import lead as lead_crud
+from apps.api.app.crud import lead_crud
 from apps.api.app.schemas.lead import (
     LeadCreate,
     LeadUpdate,
@@ -78,7 +78,10 @@ def list_leads(
         limit=limit
     )
     
-    leads = lead_crud.search_leads(db, search_params)
+    leads = lead_crud.get_multi(
+        db, 
+        **search_params.model_dump()
+    )
     return leads
 
 

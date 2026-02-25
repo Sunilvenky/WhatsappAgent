@@ -26,6 +26,7 @@ class Conversation(Base):
     __tablename__ = "conversations"
 
     id = Column(Integer, primary_key=True, index=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, index=True)
     
     # Conversation relationships
     contact_id = Column(Integer, ForeignKey("contacts.id", ondelete="CASCADE"), nullable=False)
@@ -54,6 +55,7 @@ class Conversation(Base):
     closed_at = Column(DateTime(timezone=True), nullable=True)
 
     # Relationships
+    tenant = relationship("Tenant", back_populates="conversations")
     contact = relationship("Contact", back_populates="conversations")
     assigned_user = relationship("User", back_populates="assigned_conversations")
     messages = relationship("Message", back_populates="conversation", cascade="all, delete-orphan")

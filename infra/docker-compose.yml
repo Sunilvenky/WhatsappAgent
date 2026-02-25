@@ -1,19 +1,19 @@
 version: '3.8'
 services:
-  postgres:
-    image: postgres:15
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: whatsapp_agent
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    deploy:
-      resources:
-        limits:
-          memory: 200M
+#  postgres:
+#    image: postgres:15
+#    environment:
+#      POSTGRES_USER: postgres
+#      POSTGRES_PASSWORD: postgres
+#      POSTGRES_DB: whatsapp_agent
+#    ports:
+#      - "5432:5432"
+#    volumes:
+#      - pgdata:/var/lib/postgresql/data
+#    deploy:
+#      resources:
+#        limits:
+#          memory: 200M
 
   redis:
     image: redis:7
@@ -83,7 +83,7 @@ services:
   api:
     build: ../apps/api
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/whatsapp_agent
+      - DATABASE_URL=postgresql://postgres.hktpgjruwowdndcnrutx:Travel%40blis5555@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres?sslmode=require
       - REDIS_URL=redis://redis:6379/0
       - WHATSAPP_GATEWAY_URL=http://whatsapp-gateway:3001
       - WHATSAPP_GATEWAY_API_KEY=whatsapp_agent_key
@@ -96,10 +96,15 @@ services:
       - LLM_PROVIDER=openai
     ports:
       - "3000:3000"
+    volumes:
+      - ../apps/api/app:/app/apps/api/app
+#    depends_on:
+#      - postgres
     depends_on:
-      - postgres
       - redis
       - whatsapp-gateway
+    extra_hosts:
+      - "aws-1-ap-southeast-2.pooler.supabase.com:52.62.122.103"
     deploy:
       resources:
         limits:
@@ -109,7 +114,7 @@ services:
     build: ../apps/api
     command: celery -A apps.api.app.workers:celery_app worker --loglevel=info
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/whatsapp_agent
+      - DATABASE_URL=postgresql://postgres.hktpgjruwowdndcnrutx:Travel%40blis5555@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres?sslmode=require
       - REDIS_URL=redis://redis:6379/0
       - WHATSAPP_GATEWAY_URL=http://whatsapp-gateway:3001
       - WHATSAPP_GATEWAY_API_KEY=whatsapp_agent_key
@@ -121,8 +126,10 @@ services:
       - LLM_PROVIDER=openai
     depends_on:
       - redis
-      - postgres
+#      - postgres
       - whatsapp-gateway
+    extra_hosts:
+      - "aws-1-ap-southeast-2.pooler.supabase.com:52.62.122.103"
     deploy:
       resources:
         limits:
