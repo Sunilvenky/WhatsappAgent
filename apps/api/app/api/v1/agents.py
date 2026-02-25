@@ -7,6 +7,7 @@ from apps.api.app.schemas.agent import Agent, AgentCreate, AgentUpdate, AgentAct
 from apps.api.app.auth.dependencies import get_current_user
 from apps.api.app.models.user import User
 from apps.api.app.models.agent import AgentStatus
+from apps.api.app.core.agent_manager import agent_manager
 
 router = APIRouter()
 
@@ -79,17 +80,37 @@ def control_agent(
     action = action_in.action
     
     if action == "start":
-        # TODO: Trigger ZeroClaw process spawning
-        # For now, just update status in DB
-        return agent_crud.update_status(db, agent_id=agent_id, status=AgentStatus.RUNNING, pid=1234) # Dummy PID
+        # Start the ZeroClaw process
+        pid = agent_manager.start_agent(
+            agent_id=db_agent.id,
+            agent_name=db_agent.name,
+            system_prompt=db_agent.system_prompt or "You are a helpful assistant.",
+            config_data=db_agent.configuration or {}
+        )
+        if not pid:
+            return agent_crud.update_status(db, agent_id=agent_id, status=AgentStatus.ERROR)
+            
+        return agent_crud.update_status(db, agent_id=agent_id, status=AgentStatus.RUNNING, pid=pid)
     
     elif action == "stop":
-        # TODO: Kill ZeroClaw process
+        if db_agent.process_id:
+            agent_manager.stop_agent(db_agent.process_id)
+            
         return agent_crud.update_status(db, agent_id=agent_id, status=AgentStatus.STOPPED, pid=None)
     
     elif action == "restart":
-        # TODO: Stop then Start
-        return agent_crud.update_status(db, agent_id=agent_id, status=AgentStatus.RUNNING)
+        # Stop if running
+        if db_agent.process_id:
+            agent_manager.stop_agent(db_agent.process_id)
+            
+        # Start again
+        pid = agent_manager.start_agent(
+            agent_id=db_agent.id,
+            agent_name=db_agent.name,
+            system_prompt=db_agent.system_prompt or "You are a helpful assistant.",
+            config_data=db_agent.configuration or {}
+        )
+        return agent_crud.update_status(db, agent_id=agent_id, status=AgentStatus.RUNNING, pid=pid)
     
     elif action == "pause":
         return agent_crud.update_status(db, agent_id=agent_id, status=AgentStatus.PAUSED)
