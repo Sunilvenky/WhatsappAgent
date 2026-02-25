@@ -45,6 +45,10 @@ class AgentManager:
 
     def start_agent(self, agent_id: int, agent_name: str, system_prompt: str, config_data: dict) -> Optional[int]:
         """Start a ZeroClaw agent process and return its PID."""
+        if not os.path.exists(self.binary_path):
+            print(f"Error: ZeroClaw binary not found at {self.binary_path}")
+            return None
+            
         config_path = self._generate_config(agent_id, agent_name, system_prompt, config_data)
         
         # Build the command
