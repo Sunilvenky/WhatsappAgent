@@ -11,6 +11,8 @@ downloads/
 eggs/
 .eggs/
 lib/
+# Keep dashboard libs
+!apps/v-dashboard-v2/lib/
 lib64/
 parts/
 sdist/
