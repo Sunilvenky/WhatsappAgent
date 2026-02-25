@@ -7,8 +7,8 @@ from apps.api.app.core.config import settings
 from apps.api.app.models import *
 
 def init_db():
-    print(f"Connecting to: {settings.SQLALCHEMY_DATABASE_URI}")
-    engine = create_engine(settings.SQLALCHEMY_DATABASE_URI)
+    print(f"Connecting to: {settings.DATABASE_URL}")
+    engine = create_engine(settings.DATABASE_URL)
     
     print("Creating tables if they don't exist...")
     Base.metadata.create_all(bind=engine)
