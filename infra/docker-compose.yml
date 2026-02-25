@@ -98,6 +98,8 @@ services:
       - "3000:3000"
     volumes:
       - ../apps/api/app:/app/apps/api/app
+      - ../bin:/app/bin
+      - ../agents_config:/app/agents_config
 #    depends_on:
 #      - postgres
     depends_on:
@@ -124,6 +126,10 @@ services:
       - OPENAI_BASE_URL=http://your_zeroclaw_ip:8000/v1
       - LLM_MODEL=gpt-3.5-turbo
       - LLM_PROVIDER=openai
+    volumes:
+      - ../apps/api/app:/app/apps/api/app
+      - ../bin:/app/bin
+      - ../agents_config:/app/agents_config
     depends_on:
       - redis
 #      - postgres
