@@ -196,15 +196,16 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <motion.div
               whileHover={{ scale: 1.02 }}
+              onClick={() => router.push("/agents")}
               className="glass p-6 rounded-sm border-l-2 border-l-secondary/50 group cursor-pointer"
             >
               <MessageSquare className="w-6 h-6 text-secondary mb-4 glow-indigo" />
-              <h3 className="font-bold uppercase tracking-widest text-sm mb-2">AI Subroutine</h3>
+              <h3 className="font-bold uppercase tracking-widest text-sm mb-2">Agent War Room</h3>
               <p className="text-xs text-zinc-500 leading-relaxed mb-4">
-                The ZeroClaw neural link is active. Automated replies are processed with 98% intent accuracy.
+                Deploy and manage your autonomous subagent swarm. Neural links active across all sectors.
               </p>
               <div className="flex items-center gap-2 text-[10px] text-secondary font-bold uppercase group-hover:gap-4 transition-all">
-                Configure Neural Path <ArrowRight className="w-3 h-3" />
+                Enter Command Console <ArrowRight className="w-3 h-3" />
               </div>
             </motion.div>
 

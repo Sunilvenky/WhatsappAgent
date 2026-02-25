@@ -13,6 +13,7 @@ from .webhooks import router as webhooks_router
 from .whatsapp import router as whatsapp_router
 from .ai import router as ai_router
 from .analytics import router as analytics_router
+from .agents import router as agents_router
 # ML routers temporarily disabled - googletrans incompatible with Python 3.13 (missing cgi module)
 # from .ml import router as ml_router
 # from .training import router as training_router
@@ -29,6 +30,7 @@ api_router.include_router(conversations_router, prefix="/conversations", tags=["
 api_router.include_router(leads_router, prefix="/leads", tags=["leads"])
 api_router.include_router(webhooks_router, prefix="/webhooks", tags=["webhooks"])
 api_router.include_router(whatsapp_router, prefix="/whatsapp", tags=["whatsapp"])
+api_router.include_router(agents_router, prefix="/agents", tags=["agents"])
 api_router.include_router(ai_router, tags=["ai"])
 api_router.include_router(analytics_router, tags=["analytics"])
 # ML routers disabled - googletrans incompatible with Python 3.13

@@ -11,6 +11,7 @@ from .conversation import Conversation, ConversationStatus
 from .reply import Reply, ReplyStatus, ReplyType
 from .lead import Lead, LeadStatus, LeadSource, LeadPriority
 from .tenant import Tenant, TenantUser, APIKey, UsageRecord
+from .agent import Agent, AgentType, AgentStatus
 from .drip import CampaignStep, ContactCampaignProgress
 from .packing import Order, OrderItem, PackingListMessage
 from .payment import Invoice, PaymentReminder
@@ -56,4 +57,15 @@ __all__ = [
     "LeadStatus",
     "LeadSource",
     "LeadPriority",
+    
+    # Tenant models
+    "Tenant",
+    "TenantUser",
+    "APIKey",
+    "UsageRecord",
+    
+    # Agent models
+    "Agent",
+    "AgentType",
+    "AgentStatus",
 ]
